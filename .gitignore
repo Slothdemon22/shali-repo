@@ -41,3 +41,15 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# editor & tooling
+.vscode/
+.idea/
+
+# build caches
+.turbo
+.cache
+
+# logs
+*.log
+*.log.*
