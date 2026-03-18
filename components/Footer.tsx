@@ -1,24 +1,22 @@
 'use client';
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
   const [question, setQuestion] = useState('');
   const [comments, setComments] = useState('');
-  const [status, setStatus] = useState<null | 'idle' | 'loading' | 'success' | 'error'>(null);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !question) {
-      setStatus('error');
-      setErrorMessage('Please enter your email and question.');
+      toast.error('Please enter your email and question.');
       return;
     }
 
-    setStatus('loading');
-    setErrorMessage('');
+    setIsSending(true);
 
     try {
       const res = await fetch('/api/newsletter', {
@@ -32,13 +30,14 @@ export default function Footer() {
         throw new Error(data.error || 'Failed to send message.');
       }
 
-      setStatus('success');
       setEmail('');
       setQuestion('');
       setComments('');
+      toast.success('Message sent. Our team will reach out shortly.');
     } catch (err: any) {
-      setStatus('error');
-      setErrorMessage(err.message || 'Something went wrong. Please try again.');
+      toast.error(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -88,24 +87,13 @@ export default function Footer() {
             </div>
 
             <div className="newsletter-actions">
-              <button type="submit" disabled={status === 'loading'}>
-                {status === 'loading' ? 'SENDING YOUR MESSAGE…' : 'SEND MESSAGE'}
+              <button type="submit" disabled={isSending}>
+                {isSending ? 'SENDING YOUR MESSAGE…' : 'SEND MESSAGE'}
               </button>
               <p className="newsletter-disclaimer">
                 We respect your inbox. No spam — only direct replies and occasional important updates.
               </p>
             </div>
-
-            {status === 'success' && (
-              <p className="newsletter-status newsletter-status-success">
-                Thank you — your message has been received. We’ll be in touch soon at {email || 'your email'}.
-              </p>
-            )}
-            {status === 'error' && (
-              <p className="newsletter-status newsletter-status-error">
-                {errorMessage}
-              </p>
-            )}
           </form>
         </div>
       </div>
@@ -142,7 +130,7 @@ export default function Footer() {
           <a href="#"><i className="fab fa-youtube"></i></a>
         </div>
         <div className="copyright">
-          <p>&copy; 2026 Nishat Linen. All Rights Reserved.</p>
+          <p>&copy; 2026 Fatimas Collection. All Rights Reserved.</p>
         </div>
       </div>
     </footer>

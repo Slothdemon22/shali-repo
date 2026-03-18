@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 type Category = { id: number; name: string };
 type Product = {
@@ -123,7 +124,7 @@ export default function ProductsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !price || !categoryId || (!mainPreviewUrl && !mainImageFile)) {
-      alert('Missing required fields or Showcase Image');
+      toast.error('Please fill required fields and upload a showcase image.');
       return;
     }
 
@@ -168,10 +169,10 @@ export default function ProductsPage() {
 
       resetForm();
       fetchData();
-      alert('Product saved successfully!');
+      toast.success(editingId ? 'Product updated successfully.' : 'Product created successfully.');
     } catch (error) {
       console.error('Failed to save product', error);
-      alert('Error saving product.');
+      toast.error('Could not save product. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -182,17 +183,17 @@ export default function ProductsPage() {
     try {
       const res = await fetch(`/api/products/${deletingId}`, { method: 'DELETE' });
       if (res.ok) {
-        alert('Product deleted successfully');
+        toast.success('Product deleted successfully.');
         fetchData();
         setShowDeleteModal(false);
         setDeletingId(null);
       } else {
         const err = await res.json();
-        alert(`Failed to delete: ${err.error || 'Unknown error'}`);
+        toast.error(err.error || 'Failed to delete product.');
       }
     } catch (error) {
       console.error('Failed to delete product', error);
-      alert('Network error while deleting product');
+      toast.error('Network error while deleting product.');
     }
   };
 
@@ -460,10 +461,10 @@ export default function ProductsPage() {
                       <td>{prod.price}</td>
                       <td className="action-col">
                         <div className="action-buttons-wrap">
-                          <button className="btn-icon edit" onClick={() => handleEdit(prod)}>
+                          <button type="button" className="btn-icon edit" onClick={() => handleEdit(prod)}>
                             <i className="fas fa-edit"></i>
                           </button>
-                          <button className="btn-icon delete" onClick={() => handleDeleteTrigger(prod.id)}>
+                          <button type="button" className="btn-icon delete" onClick={() => handleDeleteTrigger(prod.id)}>
                             <i className="fas fa-trash"></i>
                           </button>
                         </div>

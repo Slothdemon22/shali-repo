@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import HomePageAnimations from '@/components/HomePageAnimations';
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
@@ -26,21 +27,33 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     include: { category: true },
   });
 
+  const heroImageSetting = await prisma.siteSettings.findUnique({
+    where: { key: 'hero_image_url' },
+  });
+  const heroImage = heroImageSetting?.value || '/images/hero_banner_1773220198541.png';
+
   return (
     <>
       <Navbar />
 
       {/* HERO SECTION */}
-      <section className="hero-section">
-        <img src="/images/hero_banner_1773220198541.png" alt="Luxury Pret Models in Grand Architectural Setting" className="hero-img" />
+      <section className="hero-section premium-hero">
+        <div className="hero-luxury-glow" />
+        <img src={heroImage} alt="Luxury Pret Models in Grand Architectural Setting" className="hero-img" />
         <div className="hero-overlay">
-          <h2 className="hero-logo">nishat <span className="pret">pret</span></h2>
-          <a href="#" className="btn-shop-now">SHOP NOW</a>
+          <p className="hero-kicker">NEW LUXURY DROP 2026</p>
+          <h2 className="hero-logo">Fatimas <span className="pret">Collection</span></h2>
+          <p className="hero-subtitle">Timeless silhouettes, rich fabrics, and elevated craftsmanship for every occasion.</p>
+          <div className="hero-cta-row">
+            <Link href="/#popular-picks" className="btn-shop-now">SHOP NOW</Link>
+            <Link href="/#elegance-ways" className="btn-shop-now light">EXPLORE STYLES</Link>
+          </div>
+          <div className="hero-scroll-indicator">SCROLL TO DISCOVER</div>
         </div>
       </section>
 
       {/* THREE WAYS TO WEAR ELEGANCE - DYNAMIC */}
-      <section className="elegance-section">
+      <section id="elegance-ways" className="elegance-section premium-section">
         <div className="elegance-header-container">
           <h3 className="elegance-header"><span>THREE WAYS TO WEAR ELEGANCE</span></h3>
         </div>
@@ -68,15 +81,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         </div>
       </section>
 
-      {/* PROMOTIONAL BANNER */}
-      <div className="promo-banner">
-        <div className="ticker">
-          <span>THE FABRIC OF PAKISTAN &nbsp; | &nbsp; NISHAT &nbsp; | &nbsp; THE FABRIC OF PAKISTAN</span>
-        </div>
-      </div>
+
 
       {/* POPULAR PICKS SECTION - DYNAMIC DATABASE DRIVEN */}
-      <section id="popular-picks" className="popular-picks-wrapper">
+      <section id="popular-picks" className="popular-picks-wrapper premium-section">
         <div className="popular-picks-header">
           <p className="subtitle">DISCOVER OUR MOST-POPULAR PICKS</p>
           <ul className="popular-categories">
@@ -128,6 +136,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           <p>Explore our curated collections designed for the modern individual.</p>
         </div>
       </section>
+
+      <HomePageAnimations />
 
       {/* FOOTER */}
       <Footer />

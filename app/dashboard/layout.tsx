@@ -1,8 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function DashboardLayout({
   children,
@@ -10,14 +11,33 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.classList.add('dashboard-scroll-lock');
+    document.body.classList.add('dashboard-scroll-lock');
+
+    return () => {
+      document.documentElement.classList.remove('dashboard-scroll-lock');
+      document.body.classList.remove('dashboard-scroll-lock');
+    };
+  }, []);
 
   return (
     <div className="admin-layout">
+      {/* MOBILE HEADER */}
+      <div className="admin-mobile-header">
+        <div className="brand-logo" style={{fontSize: '1.2rem', margin: 0}}>Fatimas <span className="pret">Collection</span></div>
+        <button className="mobile-sidebar-toggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+          <i className={isSidebarOpen ? "fas fa-times" : "fas fa-bars"}></i>
+        </button>
+      </div>
+
       {/* SIDEBAR */}
-      <aside className="admin-sidebar">
+      <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
           <Link href="/">
-            <h2 className="brand-logo">nishat <span className="pret">pret</span></h2>
+            <h2 className="brand-logo">Fatimas <span className="pret">Collection</span></h2>
           </Link>
           <div className="admin-tag">ADMIN PANEL</div>
         </div>
@@ -50,6 +70,11 @@ export default function DashboardLayout({
               <li>
                 <Link href="/dashboard/home-features" className={pathname === '/dashboard/home-features' ? 'active' : ''}>
                   <i className="fas fa-star"></i> Home Features
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/settings" className={pathname === '/dashboard/settings' ? 'active' : ''}>
+                  <i className="fas fa-cog"></i> Settings
                 </Link>
               </li>
             </ul>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 type Category = {
   id: number;
@@ -38,24 +39,26 @@ export default function CategoriesPage() {
     if (!name.trim()) return;
 
     try {
-      if (editingId) {
-        await fetch(`/api/categories/${editingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name }),
-        });
-      } else {
-        await fetch('/api/categories', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name }),
-        });
+      const method = editingId ? 'PUT' : 'POST';
+      const url = editingId ? `/api/categories/${editingId}` : '/api/categories';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to save category');
       }
+
+      toast.success(editingId ? 'Category updated.' : 'Category created.');
       setName('');
       setEditingId(null);
       fetchCategories();
     } catch (error) {
-      console.error('Failed to save category');
+      console.error('Failed to save category', error);
+      toast.error('Could not save category.');
     }
   };
 
@@ -64,17 +67,17 @@ export default function CategoriesPage() {
     try {
       const res = await fetch(`/api/categories/${deletingId}`, { method: 'DELETE' });
       if (res.ok) {
-        alert('Category and all its products deleted successfully');
+        toast.success('Category and linked products deleted.');
         fetchCategories();
         setShowDeleteModal(false);
         setDeletingId(null);
       } else {
         const err = await res.json();
-        alert(`Failed to delete: ${err.error || 'Unknown error'}`);
+        toast.error(err.error || 'Failed to delete category.');
       }
     } catch (error) {
       console.error('Failed to delete category', error);
-      alert('Network error while deleting category');
+      toast.error('Network error while deleting category.');
     }
   };
 
@@ -86,6 +89,7 @@ export default function CategoriesPage() {
   const handleEdit = (category: Category) => {
     setEditingId(category.id);
     setName(category.name);
+    toast.info(`Editing ${category.name}`);
   };
 
   return (
@@ -150,10 +154,10 @@ export default function CategoriesPage() {
                       <td><strong>{cat.name}</strong></td>
                       <td className="action-col">
                         <div className="action-buttons-wrap">
-                          <button className="btn-icon edit" onClick={() => handleEdit(cat)}>
+                          <button type="button" className="btn-icon edit" onClick={() => handleEdit(cat)}>
                             <i className="fas fa-edit"></i>
                           </button>
-                          <button className="btn-icon delete" onClick={() => handleDeleteTrigger(cat.id)}>
+                          <button type="button" className="btn-icon delete" onClick={() => handleDeleteTrigger(cat.id)}>
                             <i className="fas fa-trash"></i>
                           </button>
                         </div>

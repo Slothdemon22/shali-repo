@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         // Use your verified zalnex.me domain as the sender
         from: 'Shali Newsletter <newsletter@zalnex.me>',
-        to: 'www.basilslothdemon@gmail.com',
+        to: 'afshalzafar0@gmail.com',
         subject: 'New Newsletter Question from Shali Site',
         text: [
           `Email: ${email}`,

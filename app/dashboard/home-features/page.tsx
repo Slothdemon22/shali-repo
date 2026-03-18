@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 
 type Category = { id: number; name: string };
 type HomeFeature = {
@@ -58,11 +59,12 @@ export default function HomeFeaturesAdmin() {
       const data = await res.json();
       if (res.ok) {
         setImageUrl(data.url);
+        toast.success('Image uploaded.');
       } else {
-        alert(data.error || 'Upload failed');
+        toast.error(data.error || 'Upload failed');
       }
     } catch (err) {
-      alert('Upload failed. Please try again.');
+      toast.error('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -71,7 +73,7 @@ export default function HomeFeaturesAdmin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!imageUrl) {
-      alert('Please upload an image first.');
+      toast.error('Please upload an image first.');
       return;
     }
 
@@ -95,10 +97,13 @@ export default function HomeFeaturesAdmin() {
         setShowModal(false);
         resetForm();
         fetchFeatures();
+        toast.success(editingId ? 'Feature updated.' : 'Feature created.');
       } else {
         const err = await res.json();
-        alert(err.error || 'Something went wrong');
+        toast.error(err.error || 'Something went wrong');
       }
+    } catch {
+      toast.error('Unable to save feature right now.');
     } finally {
       setSaving(false);
     }
@@ -130,7 +135,12 @@ export default function HomeFeaturesAdmin() {
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this feature?')) {
       const res = await fetch(`/api/home-features/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchFeatures();
+      if (res.ok) {
+        toast.success('Feature deleted.');
+        fetchFeatures();
+      } else {
+        toast.error('Failed to delete feature.');
+      }
     }
   };
 

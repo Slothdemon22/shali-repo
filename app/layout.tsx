@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Nishat Pret | The Fabric of Pakistan",
+  title: "Fatimas Collection | The Fabric of Pakistan",
   description: "The Fabric of Pakistan",
 };
 
 import AiAssistant from "@/components/AiAssistant";
 import CartSidebar from "@/components/CartSidebar";
+import AppToaster from "@/components/AppToaster";
 import { CartProvider } from "@/context/CartContext";
 
 export default function RootLayout({
@@ -25,7 +26,8 @@ export default function RootLayout({
       </head>
       <body>
         <CartProvider>
-          {children}
+          <div className="site-content">{children}</div>
+          <AppToaster />
           <CartSidebar />
           <AiAssistant />
         </CartProvider>

@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -11,7 +13,11 @@ type Message = {
 export default function AiAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'Welcome to **Nishat Pret**. How can I assist you with your *styling* today?' }
+    {
+      role: 'assistant',
+      content:
+        'Welcome to **Fatimas Collection**. I can help with products, sizes, checkout, or newsletter/contact support. What do you need?',
+    }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -81,7 +87,21 @@ export default function AiAssistant() {
                 <div className="message-bubble">
                   {msg.role === 'assistant' ? (
                     <div className="markdown-content">
-                      <ReactMarkdown>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkBreaks]}
+                        components={{
+                          p: ({ children }) => <p className="md-paragraph">{children}</p>,
+                          ul: ({ children }) => <ul className="md-list">{children}</ul>,
+                          ol: ({ children }) => <ol className="md-list md-list-ordered">{children}</ol>,
+                          li: ({ children }) => <li className="md-list-item">{children}</li>,
+                          strong: ({ children }) => <strong className="md-strong">{children}</strong>,
+                          em: ({ children }) => <em className="md-em">{children}</em>,
+                          h1: ({ children }) => <h4 className="md-heading">{children}</h4>,
+                          h2: ({ children }) => <h4 className="md-heading">{children}</h4>,
+                          h3: ({ children }) => <h4 className="md-heading">{children}</h4>,
+                          code: ({ children }) => <code className="md-code">{children}</code>,
+                        }}
+                      >
                         {msg.content}
                       </ReactMarkdown>
                     </div>
@@ -105,7 +125,7 @@ export default function AiAssistant() {
           <form className="chat-input" onSubmit={handleSend}>
             <input 
               type="text" 
-              placeholder="Ask about style, sizing, or collections..."
+              placeholder="Ask anything about products, checkout, or site help..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={isLoading}

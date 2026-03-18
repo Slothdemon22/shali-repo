@@ -57,12 +57,13 @@ export default function CartSidebar() {
             <div className="cart-note">
               <p className="cart-tax-note">Taxes and shipping calculated at checkout</p>
             </div>
-            <button className="cart-checkout-btn">
+            <button className="cart-checkout-btn" onClick={() => {
+              const text = `Hello! I would like to place an order for the following items:\n\n${items.map(item => `- ${item.name} (${item.size}) x${item.quantity} - ${item.price}`).join('\n')}\n\nTotal: Rs. ${totalPrice.toLocaleString('en-PK', { minimumFractionDigits: 2 })}`;
+              const url = `https://wa.me/923184066024?text=${encodeURIComponent(text)}`;
+              window.open(url, '_blank');
+            }}>
               CHECKOUT &nbsp;•&nbsp; Rs. {totalPrice.toLocaleString('en-PK', { minimumFractionDigits: 2 })}
             </button>
-            <div className="cart-installment-note">
-              <span className="badge-purple-sm">baadmay</span> Pay in 3 Installments of <strong>Rs. {(totalPrice / 3).toLocaleString('en-PK', { minimumFractionDigits: 2 })}</strong>
-            </div>
           </div>
         )}
       </div>

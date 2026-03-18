@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function DashboardOverview() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', textAlign: 'center' }}>
       <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: '2.2rem', color: '#0f172a', marginBottom: '8px' }}>
         Welcome, Shali Kake 👋
       </h2>
@@ -10,7 +10,7 @@ export default function DashboardOverview() {
         Manage your storefront from the sidebar, or jump to a section below.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', width: '100%', maxWidth: '700px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px', width: '100%', maxWidth: '760px' }}>
         <Link href="/dashboard/categories" className="admin-form-card" style={{ textDecoration: 'none', padding: '30px 20px', textAlign: 'center', transition: 'all 0.3s', cursor: 'pointer' }}>
           <i className="fas fa-tags" style={{ fontSize: '1.8rem', color: '#ca8a04', marginBottom: '12px', display: 'block' }}></i>
           <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', letterSpacing: '0.05em' }}>Categories</h3>
@@ -25,7 +25,7 @@ export default function DashboardOverview() {
         </Link>
       </div>
 
-      <Link href="/" style={{ marginTop: '40px', fontSize: '0.8rem', color: '#64748b', textDecoration: 'underline', textUnderlineOffset: '4px' }}>
+      <Link href="/" style={{ marginTop: '28px', fontSize: '0.8rem', color: '#64748b', textDecoration: 'underline', textUnderlineOffset: '4px' }}>
         ← View Live Site
       </Link>
     </div>

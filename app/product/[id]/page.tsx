@@ -70,9 +70,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
               
               {product.sku && <p className="product-sku">SKU: {product.sku}</p>}
               
-              <div className="payment-installments">
-                <span className="badge-purple">boldpay</span> Pay in 3 installments of <strong>Rs.{(parseFloat(product.price.replace(/[^\d.]/g, '')) / 3).toFixed(2)}</strong>
-              </div>
+
 
               {/* Client Component for size selection + add to cart */}
               <AddToCartButton
@@ -88,7 +86,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                 <div className="tab-content">
                   <div className="tab-pane">
                     <p><strong>Product Detail:</strong></p>
-                    <p>{product.description || 'Premium quality attire from Nishat Linen.'}</p>
+                    <p>{product.description || 'Premium quality attire from Fatimas Collection.'}</p>
                     <ul>
                       <li><strong>Fabric:</strong> {product.fabric || 'Premium Cambric'}</li>
                       <li><strong>Color:</strong> {product.color || 'As shown'}</li>
