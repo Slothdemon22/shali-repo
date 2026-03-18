@@ -1,8 +1,66 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import Navbar from '@/components/Navbar';
 import AddToCartButton from '@/components/AddToCartButton';
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id: idStr } = await params;
+  const id = parseInt(idStr);
+
+  if (!Number.isFinite(id)) {
+    return {
+      title: 'Product',
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id },
+    include: { category: true },
+  });
+
+  if (!product) {
+    return {
+      title: 'Product Not Found',
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const description =
+    product.description ||
+    `${product.name} in ${product.category?.name || 'premium collection'} at ${product.price}.`;
+
+  return {
+    title: product.name,
+    description,
+    alternates: {
+      canonical: `/product/${product.id}`,
+    },
+    openGraph: {
+      type: 'website',
+      url: `${siteUrl}/product/${product.id}`,
+      title: `${product.name} | Fatimas Collection`,
+      description,
+      images: product.image
+        ? [{ url: product.image, alt: product.name }]
+        : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.name} | Fatimas Collection`,
+      description,
+      images: product.image ? [product.image] : undefined,
+    },
+  };
+}
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: idStr } = await params;

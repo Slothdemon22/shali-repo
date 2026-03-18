@@ -1,9 +1,21 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HomePageAnimations from '@/components/HomePageAnimations';
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+export const metadata: Metadata = {
+  title: 'Home',
+  description:
+    'Explore the latest luxury pret, ready to wear, unstitched outfits and popular picks at Fatimas Collection.',
+  alternates: {
+    canonical: '/',
+  },
+};
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
@@ -31,6 +43,17 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     where: { key: 'hero_image_url' },
   });
   const heroImage = heroImageSetting?.value || '/images/hero_banner_1773220198541.png';
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Popular Picks',
+    itemListElement: products.map((product: any, index: number) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `${siteUrl}/product/${product.id}`,
+      name: product.name,
+    })),
+  };
 
   return (
     <>
@@ -42,7 +65,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         <img src={heroImage} alt="Luxury Pret Models in Grand Architectural Setting" className="hero-img" />
         <div className="hero-overlay">
           <p className="hero-kicker">NEW LUXURY DROP 2026</p>
-          <h2 className="hero-logo">Fatimas <span className="pret">Collection</span></h2>
+          <h1 className="hero-logo">Fatimas <span className="pret">Collection</span></h1>
           <p className="hero-subtitle">Timeless silhouettes, rich fabrics, and elevated craftsmanship for every occasion.</p>
           <div className="hero-cta-row">
             <Link href="/#popular-picks" className="btn-shop-now">SHOP NOW</Link>
@@ -138,6 +161,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
       </section>
 
       <HomePageAnimations />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
 
       {/* FOOTER */}
       <Footer />
