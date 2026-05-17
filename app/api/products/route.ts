@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       data: {
         name: data.name,
         price: data.price,
+        discountPrice: data.discountPrice || null,
         badge: data.badge || null,
         description: data.description || null,
         categoryId: parseInt(data.categoryId),

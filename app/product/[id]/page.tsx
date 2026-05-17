@@ -124,7 +124,16 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
           <div className="product-info-sticky">
             <div className="product-info-content">
               <h1 className="product-title">{product.name}</h1>
-              <p className="product-price">{product.price}</p>
+              <div className="product-price-row">
+                {product.discountPrice ? (
+                  <>
+                    <span className="product-price-original">{product.price}</span>
+                    <span className="product-price product-price-discounted">{product.discountPrice}</span>
+                  </>
+                ) : (
+                  <span className="product-price">{product.price}</span>
+                )}
+              </div>
               
               {product.sku && <p className="product-sku">SKU: {product.sku}</p>}
               
@@ -134,7 +143,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
               <AddToCartButton
                 productId={product.id}
                 productName={product.name}
-                productPrice={product.price}
+                productPrice={product.discountPrice || product.price}
                 productImage={product.image}
                 availableSizes={product.sizes}
               />
@@ -168,7 +177,14 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                 </div>
                 <div className="info">
                   <h3>{p.name}</h3>
-                  <p>{p.price}</p>
+                  {p.discountPrice ? (
+                    <div className="product-price-row" style={{ flexDirection: 'row', gap: '8px' }}>
+                      <span className="product-price-original" style={{ fontSize: '0.8rem' }}>{p.price}</span>
+                      <span className="product-price product-price-discounted" style={{ fontSize: '0.9rem' }}>{p.discountPrice}</span>
+                    </div>
+                  ) : (
+                    <p>{p.price}</p>
+                  )}
                 </div>
               </Link>
             ))}

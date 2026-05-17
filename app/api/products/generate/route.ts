@@ -29,6 +29,7 @@ Required fields (if not provided in text, you MUST infer or generate a plausible
 
 Optional fields (ONLY fill if explicitly mentioned by the user. If not mentioned, return empty string ""):
 - badge (string): An optional badge like "NEW IN", "SALE", etc.
+- discountPrice (string): The discounted price if mentioned (e.g. "Rs. 18,000"). Leave blank if none.
 
 Return ONLY valid JSON. No markdown formatting, no code blocks, just raw JSON string.
 Example format:

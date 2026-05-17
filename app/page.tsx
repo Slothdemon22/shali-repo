@@ -140,7 +140,16 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                   <p className="product-title">{product.name}</p>
                   <p className="product-category">{product.category?.name}</p>
                   {product.badge && <span className="badge-new">{product.badge}</span>}
-                  <p className="product-price">{product.price}</p>
+                  <div className="product-price-row">
+                    {product.discountPrice ? (
+                      <>
+                        <span className="product-price-original">{product.price}</span>
+                        <span className="product-price product-price-discounted">{product.discountPrice}</span>
+                      </>
+                    ) : (
+                      <span className="product-price">{product.price}</span>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))

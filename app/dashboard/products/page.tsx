@@ -10,6 +10,7 @@ type Product = {
   id: number;
   name: string;
   price: string;
+  discountPrice: string | null;
   badge: string | null;
   description: string | null;
   image: string;
@@ -36,6 +37,7 @@ export default function ProductsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
+  const [discountPrice, setDiscountPrice] = useState('');
   const [badge, setBadge] = useState('');
   const [description, setDescription] = useState('');
   const [sku, setSku] = useState('');
@@ -134,6 +136,7 @@ export default function ProductsPage() {
       // Auto-fill form
       setName(data.name || '');
       setPrice(data.price || '');
+      setDiscountPrice(data.discountPrice || '');
       setSku(data.sku || '');
       setFabric(data.fabric || '');
       setColor(data.color || '');
@@ -223,6 +226,7 @@ export default function ProductsPage() {
       const payload = { 
         name, 
         price, 
+        discountPrice: discountPrice || null,
         badge: badge || null, 
         description: description || null,
         sku: sku || null,
@@ -284,6 +288,7 @@ export default function ProductsPage() {
     setEditingId(product.id);
     setName(product.name);
     setPrice(product.price);
+    setDiscountPrice(product.discountPrice || '');
     setBadge(product.badge || '');
     setDescription(product.description || '');
     setSku(product.sku || '');
@@ -304,8 +309,8 @@ export default function ProductsPage() {
     setEditingId(null);
     setName('');
     setPrice('');
-    setBadge('');
-    setDescription('');
+    setDiscountPrice('');
+    setBadge('');    setDescription('');
     setSku('');
     setFabric('');
     setColor('');
@@ -365,15 +370,28 @@ export default function ProductsPage() {
               />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
               <div className="form-group">
-                <label>Price String</label>
+                <label>Price</label>
                 <input 
                   type="text" 
                   value={price} 
                   onChange={(e) => setPrice(e.target.value)} 
                   required 
                   placeholder="e.g. Rs. 22,900"
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  Discounted Price
+                  <span style={{ fontSize: '0.7rem', fontWeight: 500, color: '#94a3b8', background: '#f1f5f9', padding: '1px 6px', borderRadius: '10px' }}>Optional</span>
+                </label>
+                <input 
+                  type="text" 
+                  value={discountPrice} 
+                  onChange={(e) => setDiscountPrice(e.target.value)} 
+                  placeholder="e.g. Rs. 18,000"
+                  style={{ borderColor: discountPrice ? '#22c55e' : undefined }}
                 />
               </div>
               <div className="form-group">

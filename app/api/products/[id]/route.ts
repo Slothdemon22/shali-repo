@@ -53,6 +53,7 @@ export async function PUT(
       data: {
         name: data.name,
         price: data.price,
+        discountPrice: data.discountPrice !== undefined ? data.discountPrice : undefined,
         badge: data.badge || null,
         description: data.description || null,
         categoryId: data.categoryId ? parseInt(data.categoryId) : undefined,
