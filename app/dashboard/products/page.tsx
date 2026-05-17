@@ -52,6 +52,11 @@ export default function ProductsPage() {
   const [existingGalleryUrls, setExistingGalleryUrls] = useState<string[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
 
+  // AI Generation State
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiInputText, setAiInputText] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -101,6 +106,79 @@ export default function ProductsPage() {
     setSizes(prev => 
       prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
     );
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiInputText.trim()) {
+      toast.error('Please enter or upload some text first.');
+      return;
+    }
+    
+    setIsGenerating(true);
+    try {
+      const res = await fetch('/api/products/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text: aiInputText,
+          availableCategories: categories.map((c: any) => c.name)
+        })
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to generate product details');
+      }
+      
+      const data = await res.json();
+      
+      // Auto-fill form
+      setName(data.name || '');
+      setPrice(data.price || '');
+      setSku(data.sku || '');
+      setFabric(data.fabric || '');
+      setColor(data.color || '');
+      setDescription(data.description || '');
+      setBadge(data.badge || '');
+      
+      if (data.sizes && Array.isArray(data.sizes)) {
+        setSizes(data.sizes);
+      }
+      
+      // Match category
+      if (data.categoryName && categories.length > 0) {
+        const matchedCat = categories.find(c => 
+          c.name.toLowerCase().includes(data.categoryName.toLowerCase()) || 
+          data.categoryName.toLowerCase().includes(c.name.toLowerCase())
+        );
+        if (matchedCat) {
+          setCategoryId(matchedCat.id.toString());
+        }
+      }
+      
+      toast.success('Product details generated successfully!');
+      setShowAiModal(false);
+      setAiInputText('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+      console.error(error);
+      toast.error('Error generating product details.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result;
+        if (typeof text === 'string') {
+          setAiInputText(prev => prev ? prev + '\\n\\n' + text : text);
+        }
+      };
+      reader.readAsText(file);
+    }
   };
 
   const uploadImage = async (file: File) => {
@@ -249,7 +327,32 @@ export default function ProductsPage() {
       <div className="admin-grid-layout">
         {/* FORM SECTION */}
         <div className="admin-form-card">
-          <h3>{editingId ? 'Edit Product' : 'Add New Product'}</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ margin: 0 }}>{editingId ? 'Edit Product' : 'Add New Product'}</h3>
+            <button 
+              type="button" 
+              onClick={() => setShowAiModal(true)}
+              style={{
+                background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              <i className="fas fa-magic"></i> AI Generate
+            </button>
+          </div>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Product Name</label>
@@ -499,6 +602,231 @@ export default function ProductsPage() {
                 onClick={confirmDelete}
               >
                 Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Generation Modal */}
+      {showAiModal && (
+        <div className="modal-backdrop" style={{ zIndex: 10000 }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            padding: '40px',
+            borderRadius: '24px',
+            maxWidth: '650px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,0.05)',
+            animation: 'modal-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            textAlign: 'left',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => setShowAiModal(false)}
+              style={{ position: 'absolute', top: '24px', right: '24px', background: '#f1f5f9', border: 'none', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', transition: 'all 0.2s' }}
+              onMouseOver={(e) => { e.currentTarget.style.background = '#e2e8f0'; e.currentTarget.style.color = '#0f172a'; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }}
+            >
+              <i className="fas fa-times"></i>
+            </button>
+
+            <div style={{ marginBottom: '30px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.75rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '700', letterSpacing: '-0.5px' }}>
+                <i className="fas fa-magic" style={{ color: '#0f172a', fontSize: '1.4rem' }}></i> 
+                <span>AI Generator</span>
+              </h3>
+              <p style={{ fontSize: '0.95rem', color: '#64748b', marginTop: '8px', lineHeight: '1.5' }}>
+                Instantly extract and format product details from unstructured text. Paste your content or upload a text file below.
+              </p>
+            </div>
+            
+            <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '30px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <i className="fas fa-info-circle" style={{ color: '#64748b', marginTop: '4px' }}></i>
+                <div>
+                  <strong style={{ fontSize: '0.85rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '1px' }}>Example Format</strong>
+                  <p style={{ fontSize: '0.9rem', color: '#475569', margin: '8px 0 0', fontStyle: 'italic', lineHeight: '1.6' }}>
+                    "We are launching a new Midnight Black Lawn suit for Rs. 22,900. It's a 3 piece embroidered suit. SKU is SK-123. It comes in XS, S, M. Category is Luxury."
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: 'grid', gap: '24px' }}>
+              <div>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', fontWeight: '600', color: '#1e293b', marginBottom: '12px' }}>
+                  <span><i className="fas fa-file-alt" style={{ marginRight: '8px', color: '#64748b' }}></i> Upload Text File</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#94a3b8', background: '#f1f5f9', padding: '2px 8px', borderRadius: '12px' }}>Optional</span>
+                </label>
+                <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-block', width: '100%' }}>
+                  <button type="button" style={{ width: '100%', padding: '16px', background: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '12px', color: '#64748b', fontSize: '0.95rem', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'all 0.2s', cursor: 'pointer' }} onMouseOver={(e) => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#334155'; }} onMouseOut={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#64748b'; }}>
+                    <i className="fas fa-file-upload"></i> Select a .txt file
+                  </button>
+                  <input 
+                    type="file" 
+                    accept=".txt" 
+                    onChange={handleFileUpload}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', margin: '5px 0' }}>
+                  <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>OR PASTE TEXT</span>
+                  <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#1e293b', marginBottom: '12px' }}>
+                  <i className="fas fa-align-left" style={{ marginRight: '8px', color: '#64748b' }}></i> Product Description
+                </label>
+                <textarea 
+                  value={aiInputText}
+                  onChange={(e) => setAiInputText(e.target.value)}
+                  placeholder="Paste your product details here..."
+                  rows={6}
+                  style={{ 
+                    width: '100%', 
+                    padding: '16px', 
+                    borderRadius: '16px', 
+                    border: '2px solid #e2e8f0', 
+                    background: '#ffffff',
+                    resize: 'vertical',
+                    fontFamily: 'inherit',
+                    fontSize: '0.95rem',
+                    color: '#334155',
+                    lineHeight: '1.6',
+                    transition: 'all 0.2s',
+                    outline: 'none',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#94a3b8';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(148, 163, 184, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.02)';
+                  }}
+                />
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', margin: '10px 0 5px' }}>
+                  <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>IMAGES (OPTIONAL)</span>
+                  <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', fontWeight: '600', color: '#1e293b', marginBottom: '8px' }}>
+                    <span><i className="fas fa-image" style={{ marginRight: '6px', color: '#64748b' }}></i> Showcase Image</span>
+                  </label>
+                  <div style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100px', background: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '12px', transition: 'all 0.2s', cursor: 'pointer' }} onMouseOver={(e) => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.background = '#f1f5f9'; }} onMouseOut={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f8fafc'; }}>
+                    <i className="fas fa-cloud-upload-alt" style={{ fontSize: '1.2rem', color: '#94a3b8', marginBottom: '6px' }}></i>
+                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>{mainImageFile ? 'Change Image' : 'Select Image'}</span>
+                    <input type="file" accept="image/*" onChange={handleMainImageChange} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} />
+                  </div>
+                  {mainPreviewUrl && (
+                    <div style={{ marginTop: '10px', borderRadius: '8px', overflow: 'hidden', height: '60px', width: '60px', border: '1px solid #e2e8f0' }}>
+                      <img src={mainPreviewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                </div>
+                
+                <div>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', fontWeight: '600', color: '#1e293b', marginBottom: '8px' }}>
+                    <span><i className="fas fa-images" style={{ marginRight: '6px', color: '#64748b' }}></i> Gallery Images</span>
+                  </label>
+                  <div style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100px', background: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '12px', transition: 'all 0.2s', cursor: 'pointer' }} onMouseOver={(e) => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.background = '#f1f5f9'; }} onMouseOut={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f8fafc'; }}>
+                    <i className="fas fa-images" style={{ fontSize: '1.2rem', color: '#94a3b8', marginBottom: '6px' }}></i>
+                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>{galleryFiles.length > 0 ? 'Add More' : 'Select Images'}</span>
+                    <input type="file" accept="image/*" multiple onChange={handleGalleryChange} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} />
+                  </div>
+                  {galleryPreviews.length > 0 && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+                      {galleryPreviews.slice(0, 3).map((url, idx) => (
+                        <div key={idx} style={{ flexShrink: 0, borderRadius: '8px', overflow: 'hidden', height: '40px', width: '40px', border: '1px solid #e2e8f0' }}>
+                          <img src={url} alt="Gallery Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      ))}
+                      {galleryPreviews.length > 3 && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40px', width: '40px', background: '#f1f5f9', borderRadius: '8px', fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                          +{galleryPreviews.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '40px' }}>
+              <button 
+                onClick={() => setShowAiModal(false)}
+                disabled={isGenerating}
+                style={{
+                  background: 'transparent',
+                  color: '#64748b',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  fontSize: '0.95rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => { if (!isGenerating) e.currentTarget.style.color = '#0f172a'; }}
+                onMouseOut={(e) => { if (!isGenerating) e.currentTarget.style.color = '#64748b'; }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleAiGenerate}
+                disabled={isGenerating || !aiInputText.trim()}
+                style={{
+                  background: isGenerating || !aiInputText.trim() ? '#cbd5e1' : '#0f172a',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 28px',
+                  borderRadius: '12px',
+                  fontSize: '0.95rem',
+                  fontWeight: '600',
+                  cursor: isGenerating || !aiInputText.trim() ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  boxShadow: isGenerating || !aiInputText.trim() ? 'none' : '0 10px 15px -3px rgba(15, 23, 42, 0.2), 0 4px 6px -2px rgba(15, 23, 42, 0.1)',
+                  transition: 'all 0.2s',
+                  transform: isGenerating || !aiInputText.trim() ? 'none' : 'translateY(0)'
+                }}
+                onMouseOver={(e) => {
+                  if(!isGenerating && aiInputText.trim()) {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(15, 23, 42, 0.3), 0 10px 10px -5px rgba(15, 23, 42, 0.15)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if(!isGenerating && aiInputText.trim()) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(15, 23, 42, 0.2), 0 4px 6px -2px rgba(15, 23, 42, 0.1)';
+                  }
+                }}
+              >
+                {isGenerating ? (
+                  <><i className="fas fa-spinner fa-spin"></i> Extracting...</>
+                ) : (
+                  <><i className="fas fa-check-circle"></i> Auto-Fill Details</>
+                )}
               </button>
             </div>
           </div>

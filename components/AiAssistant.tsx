@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -11,17 +12,26 @@ type Message = {
 };
 
 export default function AiAssistant() {
+  const pathname = usePathname() || '';
+  const isAdmin = pathname.startsWith('/dashboard');
+
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content:
-        'Welcome to **Fatimas Collection**. I can help with products, sizes, checkout, or newsletter/contact support. What do you need?',
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Set initial message based on role
+    setMessages([
+      {
+        role: 'assistant',
+        content: isAdmin 
+          ? "Hii Admin~ I'm **Waguri**, your super cute and playful assistant! ✨ Ready to manage our awesome shop today? What can I help you with?\n\n*(Created by bacillus)*"
+          : 'Welcome to **Fatimas Collection**. I can help with products, sizes, checkout, or newsletter/contact support. What do you need?',
+      }
+    ]);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -43,7 +53,8 @@ export default function AiAssistant() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, { role: 'user', content: userMessage }].slice(-6) 
+          messages: [...messages, { role: 'user', content: userMessage }].slice(-6),
+          isAdmin 
         })
       });
 
@@ -75,16 +86,23 @@ export default function AiAssistant() {
       {isOpen && (
         <div className="chat-container">
           <div className="chat-header">
-            <div className="header-info">
-              <span className="dot"></span>
-              <h4>Shali Assistant</h4>
+            <div className="header-info" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {isAdmin ? (
+                <img src="/images/waguri.png" alt="Waguri" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} />
+              ) : (
+                <span className="dot"></span>
+              )}
+              <h4>{isAdmin ? 'Waguri ✨' : 'Shali Assistant'}</h4>
             </div>
           </div>
 
           <div className="chat-messages" ref={scrollRef}>
             {messages.map((msg: Message, idx: number) => (
               <div key={idx} className={`message-row ${msg.role}`}>
-                <div className="message-bubble">
+                {msg.role === 'assistant' && isAdmin && (
+                  <img src="/images/waguri.png" alt="Waguri" style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, marginTop: '4px', marginRight: '6px' }} />
+                )}
+                <div className="message-bubble" style={{ flex: 1 }}>
                   {msg.role === 'assistant' ? (
                     <div className="markdown-content">
                       <ReactMarkdown
@@ -113,6 +131,9 @@ export default function AiAssistant() {
             ))}
             {isLoading && (
               <div className="message-row assistant">
+                {isAdmin && (
+                  <img src="/images/waguri.png" alt="Waguri" style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, marginTop: '4px', marginRight: '6px' }} />
+                )}
                 <div className="message-bubble typing">
                   <span className="dot"></span>
                   <span className="dot"></span>

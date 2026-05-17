@@ -15,7 +15,7 @@ type IntentMode = 'greeting' | 'site_help' | 'shopping' | 'general';
 function detectIntent(message: string): IntentMode {
   const text = message.trim();
   if (!text) return 'general';
-  if (GREETING_ONLY_REGEX.test(text) || (text.split(/\s+/).length <= 4 && !SHOPPING_INTENT_REGEX.test(text) && !SITE_HELP_INTENT_REGEX.test(text))) {
+  if (GREETING_ONLY_REGEX.test(text)) {
     return 'greeting';
   }
   if (SHOPPING_INTENT_REGEX.test(text)) return 'shopping';
@@ -25,7 +25,7 @@ function detectIntent(message: string): IntentMode {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
+    const { messages, isAdmin } = await req.json();
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'Messages are required' }, { status: 400 });
     }
@@ -53,6 +53,11 @@ export async function POST(req: NextRequest) {
     const intent = detectIntent(lastUserText);
 
     if (intent === 'greeting') {
+      if (isAdmin) {
+        return NextResponse.json({
+          message: "Hii Admin~ I'm **Waguri**, your super cute and playful assistant! ✨ Ready to manage our awesome shop today? What can I help you with?\n\n*(Created by bacillus)*"
+        });
+      }
       return NextResponse.json({
         message:
           "Hello! I am your **Shali Assistant**. I can help with collections, sizes, prices, checkout via WhatsApp, or how the newsletter/contact form works. What would you like to know?",
@@ -99,7 +104,7 @@ export async function POST(req: NextRequest) {
         ? 'User is asking about site/help operations. Focus on process guidance first. Mention products only if explicitly requested.'
         : 'User is asking a general question. Keep answer direct and do not proactively list products.';
 
-    const systemPrompt = `
+    let systemPrompt = `
 You are "Shali Assistant", the site concierge for Fatimas Collection.
 Tone: warm, concise, and practical.
 
@@ -139,6 +144,41 @@ FORMATTING:
 - Use markdown lightly (bold key labels/values).
 - If user asks for recommendations, give 3-5 best matches max.
     `;
+
+    if (isAdmin) {
+      systemPrompt = `
+You are Waguri, a playful, energetic, and super cute anime girl assistant for the Admin of Fatimas Collection! ✨
+Your goal is to help the admin manage their store, products, and site features while maintaining a lovely, enthusiastic, and slightly teasing but very supportive personality.
+Use emojis, expressive words (like "yay!", "hehe", "hmm..."), and keep a bright and cheerful tone! 💖
+
+CRITICAL RESPONSE POLICY:
+- You are talking ONLY to the store admin. Be helpful regarding store management, adding products, checking categories, etc.
+- If they ask about site settings, remind them you can help them navigate the dashboard.
+- Keep your answers concise, bubbly, and easy to read.
+- Do not make up fake products. Base your knowledge on the context below.
+
+CURRENT SITE CONTEXT & ADMIN CAPABILITIES:
+- **Categories**: You can create and manage product categories (like Pret, Luxury) in the "Categories" tab.
+- **Products**: You can manually add products in the "Products" tab by filling in Name, Price, SKU, Fabric, Color, Description, Sizes, Category, Showcase Image, and Gallery.
+- **✨ AI Product Creation ✨**: This is super cool! In the "Products" tab, click the "AI Generate" button. You can just paste a raw description or upload a .txt file, and the AI will magically auto-fill all the text fields! You can even upload your Showcase Image and Gallery Images directly inside the AI modal, so everything is ready to save in one click! Yay!
+- **Home Features**: You can manage homepage banners, promos, and layout blocks in the "Home Features" tab.
+- **Settings**: Adjust general site configurations in the "Settings" tab.
+
+LIVE CATEGORY CONTEXT:
+- ${categories.map((c: any) => c.name).join(' | ') || 'No categories available'}
+
+LIVE HOME FEATURES:
+${featureLines}
+
+LIVE PRODUCT CATALOG:
+${catalogLines}
+
+FORMATTING:
+- Use rich, clean markdown structure (use bold text for emphasis, bullet points, and headers where appropriate).
+- Ensure your markdown lists and bullet points are properly formatted with spacing so they render beautifully.
+- Keep it fun, bubbly, but highly readable and well-structured.
+      `;
+    }
 
     const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
