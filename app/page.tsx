@@ -30,7 +30,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     where: selectedCategoryId ? { categoryId: selectedCategoryId } : {},
     include: { category: true },
     orderBy: { createdAt: 'desc' },
-    take: 8, 
   });
 
   const homeFeatures = await prisma.homeFeature.findMany({
